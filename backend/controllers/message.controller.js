@@ -1,54 +1,48 @@
 import Conversation from '../models/conversation.model.js'
 import Message from '../models/message.model.js'
 
-export const sendMessage = async(req,res)=>{
-    try{
-        const {id:receiverId} = req.params;
-        const {message} = req.body;
-        const senderId = req.user._id
 
-        const conversation = await Conversation.findOne({
-            participants:{
-                $all: [senderId, receiverId] //find the conversation where participants array includes all these fields
+export const sendMessage = async (req, res) => {
+    try {
+        const { id: receiverId } = req.params;
+        const { message } = req.body;
+        const senderId = req.user._id;
+
+        let conversation = await Conversation.findOne({
+            participants: {
+                $all: [senderId, receiverId] // Find the conversation where participants array includes all these fields
             },
-        })
+        });
 
-        if(!conversation){
+        if (!conversation) {
             conversation = await Conversation.create({
-                participants:[senderId,receiverId]
-            })
+                participants: [senderId, receiverId]
+            });
+            console.log("New conversation created");
         }
-        console.log("new conversation created");
 
         const newMessage = new Message({
             senderId,
             receiverId,
             message
-        }) 
-        // console.log("message created");
+        });
 
-        if(newMessage){
-            conversation.message.push(newMessage._id)
+        if (newMessage) {
+            conversation.message.push(newMessage._id); // Assuming 'messages' is the correct field in your schema
         }
 
-        //SOCKET IO FUNCTIONALITY WILL GO HERE
+        // SOCKET IO FUNCTIONALITY WILL GO HERE
 
+        // Save both the conversation and the new message in parallel
+        await Promise.all([conversation.save(), newMessage.save()]);
 
-        // await conversation.save();
-        // await newMessage.save();
-
-        //this will run in parallel
-        await Promise.all(conversation.save(),newMessage.save());
-
-        res.status(201).json(newMessage)
-
+        res.status(201).json(newMessage);
+    } catch (error) {
+        console.log("Error in sendMessage controller", error);
+        res.status(500).json({ error: "Internal server error" });
     }
-    catch(error){
-        console.log("error in send message controller", error);
-        res.status(500).json({error:"Internal server error"})
-    }
+};
 
-}
 
 export const getMessages = async(req,res)=>{
     try{
