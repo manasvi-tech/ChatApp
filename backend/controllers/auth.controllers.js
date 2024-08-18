@@ -55,28 +55,42 @@ export const signup = async (req, res) => {
         res.status(500).json({ error: "Internal Server error" })
     }
 }
+
 export const login = async (req, res) => {
     try {
         const { username, password } = req.body;
         const user = await User.findOne({ username });
-        const isPasswordCorrect = bcrypt.compare(password, user?.password || "");
 
-        if (!user || isPasswordCorrect) {
-            res.status(500).json({ error: "Invalid username or password" });
+        // Debugging logs
+        if (!user) {
+            console.log(`User not found: ${username}`);
+            return res.status(500).json({ error: "Invalid username or password" });
         }
+
+        // Correctly handle the password comparison
+        const isPasswordCorrect = await bcrypt.compare(password, user.password);
+
+        if (!isPasswordCorrect) {
+            console.log(`Password mismatch for user: ${username}`);
+            return res.status(500).json({ error: "Invalid username or password" });
+        }
+
+        // Generate JWT token and set it in the response cookie
         generateTokenAndSetCookie(user._id, res);
 
-        re.status(200).json({
+        return res.status(200).json({
             _id: user._id,
             fullName: user.fullName,
             username: user.username,
             profilePic: user.profilePic
         });
     } catch (err) {
-        console.log("Error is login controller")
-        res.status(500).json({ error: "Internal Server error" })
+        console.log("Error in login controller", err);
+        return res.status(500).json({ error: "Internal Server error" });
     }  
 }
+
+
 
 export const logout = (req, res) => {
     try{
