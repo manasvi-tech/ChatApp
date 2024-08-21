@@ -9,7 +9,7 @@ import { useAuthContext } from './context/AuthContext'
 
 function App() {
   const { authUser } = useAuthContext();
-  console.log(authUser)
+  // console.log(authUser)
 
   if (authUser === undefined) {
     // Optionally, you can return a loading spinner or some fallback UI
