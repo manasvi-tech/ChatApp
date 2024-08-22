@@ -8,13 +8,11 @@ import messageRoutes from "./routes/message.routes.js"
 import userRoutes from "./routes/user.routes.js"
 
 import connectToMongo from "./db/connect.js";
+import { app,server } from "./socket/socket.js"
 
 dotenv.config();
 
-const app = express();
 const PORT = process.env.PORT 
-
-
 
 app.use(express.json()) // to parse the incoming requests with JSON payloads (from req.body)
 app.use(cookieParser());
@@ -27,7 +25,7 @@ app.use("/api/auth", authRoutes );
 app.use("/api/messages", messageRoutes);
 app.use("/api/users", userRoutes);
 
-app.listen(PORT, ()=>{
+server.listen(PORT, ()=>{
     connectToMongo();
     console.log(`Listening on port ${PORT}`)
 })
